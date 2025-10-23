@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat KTR - 미답변 질문 로그</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #0A4C8A 0%, #1565C0 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0A4C8A 0%, #1565C0 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0A4C8A;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .actions {
+            padding: 20px 40px;
+            background: white;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0A4C8A 0%, #1565C0 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 76, 138, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #202124;
+        }
+
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        .content {
+            padding: 30px 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #202124;
+            border-bottom: 2px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-unanswered {
+            background: #fef3cd;
+            color: #856404;
+        }
+
+        .status-answered {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #5f6368;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #202124;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #0A4C8A;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+
+        .export-info {
+            background: #e3f2fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #0A4C8A;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Chat KTR - 미답변 질문 로그</h1>
+            <p>답변하지 못한 질문들을 확인하고 지식 베이스에 추가하세요</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">-</div>
+                <div class="stat-label">전체 질문</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="unansweredCount">-</div>
+                <div class="stat-label">미답변 질문</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="answeredCount">-</div>
+                <div class="stat-label">답변 완료</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="loadLogs()">🔄 새로고침</button>
+            <button class="btn btn-secondary" onclick="exportToExcel()">📥 엑셀 다운로드</button>
+            <a href="/" class="btn btn-secondary">← 챗봇으로 돌아가기</a>
+        </div>
+
+        <div class="content">
+            <div id="loadingState" class="loading">
+                로그 로딩 중...
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h2>🎉 모든 질문에 답변했습니다!</h2>
+                <p>미답변 질문이 없습니다.</p>
+            </div>
+
+            <table id="logTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">번호</th>
+                        <th>질문</th>
+                        <th style="width: 180px;">일시</th>
+                        <th style="width: 100px;">상태</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                </tbody>
+            </table>
+
+            <div class="export-info">
+                <strong>💡 팁:</strong> 
+                이 질문들을 data/data.xlsx에 추가하면 챗봇이 더 똑똑해집니다!
+                <br>
+                파일 위치: <code>logs/unanswered_questions.xlsx</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadLogs() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('logTable');
+            const tableBody = document.getElementById('logTableBody');
+
+            loadingState.style.display = 'block';
+            emptyState.style.display = 'none';
+            table.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/unanswered');
+                const data = await response.json();
+
+                loadingState.style.display = 'none';
+
+                if (data.success && data.questions.length > 0) {
+                    // 통계 업데이트
+                    document.getElementById('totalCount').textContent = data.total;
+                    document.getElementById('unansweredCount').textContent = data.unanswered_count;
+                    document.getElementById('answeredCount').textContent = data.total - data.unanswered_count;
+
+                    // 테이블 채우기
+                    tableBody.innerHTML = '';
+                    data.questions.forEach(q => {
+                        const row = document.createElement('tr');
+                        
+                        const statusClass = q.상태 === '미답변' ? 'status-unanswered' : 'status-answered';
+                        
+                        row.innerHTML = `
+                            <td>${q.번호}</td>
+                            <td><strong>${q.질문}</strong></td>
+                            <td>${q.일시}</td>
+                            <td><span class="status-badge ${statusClass}">${q.상태}</span></td>
+                            <td>${q.비고 || '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    table.style.display = 'table';
+                } else {
+                    // 빈 상태
+                    emptyState.style.display = 'block';
+                    document.getElementById('totalCount').textContent = '0';
+                    document.getElementById('unansweredCount').textContent = '0';
+                    document.getElementById('answeredCount').textContent = '0';
+                }
+            } catch (error) {
+                loadingState.style.display = 'none';
+                alert('로그 로딩 실패: ' + error.message);
+            }
+        }
+
+        function exportToExcel() {
+            alert('엑셀 파일 위치: logs/unanswered_questions.xlsx\n\n해당 파일을 직접 열어서 확인하세요!');
+        }
+
+        // 페이지 로드 시 자동 로딩
+        window.addEventListener('load', loadLogs);
+
+        // 5초마다 자동 새로고침
+        setInterval(loadLogs, 5000);
+    </script>
+</body>
+</html>
