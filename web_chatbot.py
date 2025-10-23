@@ -217,13 +217,13 @@ if __name__ == '__main__':
     print("\n" + "="*60)
     print("Chat KTR 서버 시작")
     print("="*60)
-    print("URL: http://localhost:5000")
+    print("URL: http://localhost:8000")
     print("지식 베이스: {}개 질문-답변".format(len(chatbot.knowledge_base)))
     print("의미 기반 검색 활성화")
     print("="*60 + "\n")
     
     # 3. Flask 웹 서버 실행
     # - host='0.0.0.0': 네트워크 모든 주소에서 접속 가능
-    # - port=5000: 5000번 포트 사용
-    # - debug=True: 코드 수정 시 자동 재시작
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # - port=8000: 8000번 포트 사용 (서버 요구사항)
+    # - debug=False: 프로덕션 환경에서는 debug 비활성화
+    app.run(host='0.0.0.0', port=8000, debug=False)
